@@ -10,9 +10,6 @@ __pycache__/
 # python env
 telbot/
 
-# database
-db/
-
 # secret variables
 .env
 
