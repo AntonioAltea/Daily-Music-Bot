@@ -29,7 +29,10 @@ def getSpotifyLink():
         link_list = [item['track']['external_urls']['spotify']
                      for _, item in enumerate(tracks_in_playlist['items'])]
 
-        random_link = random.choice(link_list)
+        # the si parameter is required so the link is opened with the andorid app,
+        # but it wont show metadata in webapp, no idea why
+        random_link = random.choice(link_list)  # + "?si=0"
+
     return random_link
 
 

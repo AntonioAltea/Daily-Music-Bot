@@ -54,7 +54,8 @@ class DailyMusicBot:
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="You are already subscribed")
+                text="You are already subscribed. Use /unsubscribe if you" +
+                " don't want to receive daily songs anymore")
 
     async def unsubscribe(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         users_to_delete = self.userdb.getBy(
@@ -86,9 +87,10 @@ class DailyMusicBot:
             text=message)
 
     async def sendSongDaily(self, context: CallbackContext):
+        link = getSpotifyLink()
         for user in self.userdb.getAll():
             message = "Hello, " + user["name"] + \
-                "! Enjoy this song!\n" + getSpotifyLink()
+                "! Enjoy this song!\n" + link
             await context.bot.send_message(
                 chat_id=user["chatid"],
                 text=message)

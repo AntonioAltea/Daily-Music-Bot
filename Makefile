@@ -11,8 +11,9 @@ built-image:
 run-image:
 	docker run daily-music-bot
 
-stop-fly:
-	flyctl scale count 0
+fly-destroy:
+	flyctl apps destroy daily-music-bot
 
-start-fly:
-	flyctl scale count 1
+fly-create:
+	flyctl apps create daily-music-bot
+	flyctl deploy
