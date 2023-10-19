@@ -5,10 +5,10 @@ clean:
 	@echo "Cleaning database..."
 	@ - rm -f db/*
 
-built-image:
+docker-buit:
 	docker build -t daily-music-bot .
 
-run-image:
+docker-run:
 	docker run daily-music-bot
 
 fly-destroy:
