@@ -42,8 +42,9 @@ class DailyMusicBot:
     async def subscribe(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id_list = [x["chatid"] for x in self.userdb.getAll()]
         if update.effective_chat.id not in chat_id_list:
+            print(update.message.from_user)
             self.userdb.add(
-                {"name": update.message.from_user["username"],
+                {"name": update.message.from_user["first_name"],
                  "chatid": update.effective_chat.id}
             )
 
@@ -59,7 +60,7 @@ class DailyMusicBot:
 
     async def unsubscribe(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         users_to_delete = self.userdb.getBy(
-            {"name": update.message.from_user["username"]})
+            {"name": update.message.from_user["first_name"]})
         if users_to_delete != []:
             for user in users_to_delete:
                 self.userdb.deleteById(user["id"])
