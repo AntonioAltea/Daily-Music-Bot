@@ -5,11 +5,14 @@ clean:
 	@echo "Cleaning database..."
 	@ - rm -f db/*
 
-docker-buit:
-	docker build -t daily-music-bot .
+docker-build:
+	docker build --rm -t daily-music-bot .
 
 docker-run:
-	docker run daily-music-bot
+	docker run --rm daily-music-bot
+
+docker-rm-dangling:
+	@docker rmi $(docker images -f "dangling=true" -q)
 
 fly-destroy:
 	flyctl apps destroy daily-music-bot
@@ -17,3 +20,21 @@ fly-destroy:
 fly-create:
 	flyctl apps create daily-music-bot
 	flyctl deploy
+
+fly-console:
+	flyctl ssh console
+
+fly-stop:
+	flyctl scale count 0
+
+fly-resume:
+	flyctl scale count 1
+
+fly-proxy:
+	fly proxy 10022:22
+
+fly-download-database:
+	scp -P 10022 root@localhost:/db/users.json db/users.json
+
+fly-upload-database:
+	scp -P 10022 db/users.json root@localhost:/db/users.json
