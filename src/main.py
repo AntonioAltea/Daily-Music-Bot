@@ -17,7 +17,9 @@ class DailyMusicBot:
         load_dotenv()
         self.TELEGRAM_TOKEN = os.getenv("TELEGREM_TOKEN")
         self.USER_DATABASE = os.getenv("USER_DATABASE")
+        self.METRICS_DATABASE = os.getenv("METRICS_DATABASE")
         self.userdb = pysondb.getDb(self.USER_DATABASE)
+        self.metricsdb = pysondb.getDb(self.METRICS_DATABASE)
 
         logging.basicConfig(
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -59,8 +61,7 @@ class DailyMusicBot:
                 " don't want to receive daily songs anymore")
 
     async def unsubscribe(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        users_to_delete = self.userdb.getBy(
-            {"name": update.message.from_user["first_name"]})
+        users_to_delete = self.userdb.getByQuery({"name": update.message.from_user["first_name"]})
         if users_to_delete != []:
             for user in users_to_delete:
                 self.userdb.deleteById(user["id"])
@@ -81,6 +82,17 @@ class DailyMusicBot:
             print(user["chatid"])
 
     async def sendSong(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if self.metricsdb.getByQuery({"chatid": update.effective_chat.id}) == []:
+            self.metricsdb.add({"name": update.message.from_user.full_name,
+                                "chatid": update.effective_chat.id,
+                                "songs_sent": 1
+                                })
+        else:
+            songs_sent = self.metricsdb.getByQuery(
+                {"chatid": update.effective_chat.id})[0]["songs_sent"]
+            self.metricsdb.updateByQuery({"chatid": update.effective_chat.id},
+                                  {"songs_sent": songs_sent + 1})
+            
         message = "Hello, " + update.message.from_user.full_name + \
             "! Enjoy this song!\n" + getSpotifyLink()
         await context.bot.send_message(

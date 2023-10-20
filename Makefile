@@ -34,7 +34,7 @@ fly-proxy:
 	fly proxy 10022:22
 
 fly-download-database:
-	scp -P 10022 root@localhost:/db/users.json db/users.json
+	scp -P 10022 root@localhost:/db/* db/
 
 fly-upload-database:
-	scp -P 10022 db/users.json root@localhost:/db/users.json
+	scp -P 10022 db/* root@localhost:/db/
