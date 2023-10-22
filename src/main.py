@@ -38,7 +38,8 @@ class DailyMusicBot:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Hello! Use /subscribe to receive a daily song or /song to get one right now")
+            text="buenas, usa /subscribe para recibir una canción diaria o /song para recibir una" +
+            " ahora mismo")
 
     async def subscribe(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id_list = [x["chatid"] for x in self.userdb.getAll()]
@@ -51,13 +52,12 @@ class DailyMusicBot:
 
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="Welcome! I will sent you a Spotify song every day. Use /unsubscribe if you" +
-                " don't want to receive daily songs anymore")
+                text="genial! te mandaré una canción todos los días. \nusa /unsubscribe si no" +
+                " quieres recibir más")
         else:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="You are already subscribed. Use /unsubscribe if you" +
-                " don't want to receive daily songs anymore")
+                text="ya estás suscrito\nusa /unsubscribe si no quieres recibir más canciones")
 
     async def unsubscribe(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         users_to_delete = self.userdb.getByQuery({"name": update.message.from_user["first_name"]})
@@ -67,8 +67,8 @@ class DailyMusicBot:
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Yo will not receive daily songs anymore. Use /subscribe to receive daily songs" +
-            " again")
+            text="no te mandaré mas canciones\nusa /subscribe para volver a recibir caciones " +
+            "diarias")
 
     async def hello(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
@@ -79,30 +79,34 @@ class DailyMusicBot:
         for user in self.userdb.getAll():
             print(user["name"])
             print(user["chatid"])
-
-    async def sendSong(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_metrics = self.metricsdb.getByQuery({"chatid": update.effective_chat.id})
+            
+    def metrics_receive_song(self, name, chatid):
+        user_metrics = self.metricsdb.getByQuery({"chatid": chatid})
         if user_metrics == []:
-            self.metricsdb.add({"name": update.message.from_user.full_name,
-                                "chatid": update.effective_chat.id,
+            self.metricsdb.add({"name": name,
+                                "chatid": chatid,
                                 "songs_sent": 1
                                 })
         else:
             songs_sent = user_metrics[0]["songs_sent"]
-            self.metricsdb.updateByQuery({"chatid": update.effective_chat.id},
+            self.metricsdb.updateByQuery({"chatid": chatid},
                                          {"songs_sent": songs_sent + 1})
 
-        message = "Hello, " + update.message.from_user.full_name + \
-            "! Enjoy this song!\n" + getSpotifyLink()
+    async def sendSong(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        self.metrics_receive_song(name=update.message.from_user.full_name,
+                                  chatid=update.effective_chat.id)
+
+        message = "toma, " + update.message.from_user.full_name + \
+            "! un temita\n" + getSpotifyLink()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message)
-        
+
     async def metrics(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_metrics = self.metricsdb.getByQuery({"chatid": update.effective_chat.id})
         songs_sent = user_metrics[0]["songs_sent"]
 
-        message = "You have requested " + str(songs_sent) + " songs so far"
+        message = "has recibido " + str(songs_sent) + " canciones hasta ahora"
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message)
@@ -110,8 +114,10 @@ class DailyMusicBot:
     async def sendSongDaily(self, context: CallbackContext):
         link = getSpotifyLink()
         for user in self.userdb.getAll():
-            message = "Hello, " + user["name"] + \
-                "! Enjoy this song!\n" + link
+            self.metrics_receive_song(name=user["name"],
+                                      chatid=user["chatid"])
+            message = "toma, " + user["name"] + \
+                "! un temita\n" + link
             await context.bot.send_message(
                 chat_id=user["chatid"],
                 text=message)
