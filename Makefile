@@ -38,3 +38,6 @@ fly-download-database:
 
 fly-upload-database:
 	scp -P 10022 db/* root@localhost:/db/
+
+fly-ssh-key:
+	flyctl ssh issue --agent

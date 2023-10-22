@@ -9,7 +9,7 @@ load_dotenv()
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-PLAYLIST_ID = os.getenv("PLAYLIST_ID")
+PLAYLIST_IDS = os.getenv("PLAYLIST_IDS")
 
 MAX_TRACKS = 100
 
@@ -22,16 +22,18 @@ def getSpotifyLink():
         )
     )
 
-    tracks_in_playlist = sp.playlist_tracks(playlist_id=PLAYLIST_ID)
+    track_link_list = []
+    for playlist_link in PLAYLIST_IDS.split(","):
+        tracks_in_playlist = sp.playlist_tracks(playlist_id=playlist_link)
 
+        if tracks_in_playlist is not None:
+            track_link_list += [item['track']['external_urls']['spotify']
+                                for _, item in enumerate(tracks_in_playlist['items'])]
+
+    # the si parameter is required so the link is opened with the andorid app,
+    # but it wont show metadata in webapp, no idea why
     random_link = ""
-    if tracks_in_playlist is not None:
-        link_list = [item['track']['external_urls']['spotify']
-                     for _, item in enumerate(tracks_in_playlist['items'])]
-
-        # the si parameter is required so the link is opened with the andorid app,
-        # but it wont show metadata in webapp, no idea why
-        random_link = random.choice(link_list)  # + "?si=0"
+    random_link = random.choice(track_link_list)  # + "?si=0"
 
     return random_link
 

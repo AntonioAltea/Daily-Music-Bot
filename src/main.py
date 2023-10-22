@@ -29,12 +29,11 @@ class DailyMusicBot:
         self.application = ApplicationBuilder().token(self.TELEGRAM_TOKEN).build()
 
         self.application.add_handler(CommandHandler('start', self.start))
-        self.application.add_handler(
-            CommandHandler('subscribe', self.subscribe))
-        self.application.add_handler(
-            CommandHandler('unsubscribe', self.unsubscribe))
+        self.application.add_handler(CommandHandler('subscribe', self.subscribe))
+        self.application.add_handler(CommandHandler('unsubscribe', self.unsubscribe))
         self.application.add_handler(CommandHandler('hello', self.hello))
         self.application.add_handler(CommandHandler('song', self.sendSong))
+        self.application.add_handler(CommandHandler('metrics', self.metrics))
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
@@ -82,19 +81,28 @@ class DailyMusicBot:
             print(user["chatid"])
 
     async def sendSong(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if self.metricsdb.getByQuery({"chatid": update.effective_chat.id}) == []:
+        user_metrics = self.metricsdb.getByQuery({"chatid": update.effective_chat.id})
+        if user_metrics == []:
             self.metricsdb.add({"name": update.message.from_user.full_name,
                                 "chatid": update.effective_chat.id,
                                 "songs_sent": 1
                                 })
         else:
-            songs_sent = self.metricsdb.getByQuery(
-                {"chatid": update.effective_chat.id})[0]["songs_sent"]
+            songs_sent = user_metrics[0]["songs_sent"]
             self.metricsdb.updateByQuery({"chatid": update.effective_chat.id},
-                                  {"songs_sent": songs_sent + 1})
-            
+                                         {"songs_sent": songs_sent + 1})
+
         message = "Hello, " + update.message.from_user.full_name + \
             "! Enjoy this song!\n" + getSpotifyLink()
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=message)
+        
+    async def metrics(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user_metrics = self.metricsdb.getByQuery({"chatid": update.effective_chat.id})
+        songs_sent = user_metrics[0]["songs_sent"]
+
+        message = "You have requested " + str(songs_sent) + " songs so far"
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message)
@@ -112,10 +120,7 @@ class DailyMusicBot:
         self.application.job_queue.run_daily(
             self.sendSongDaily,
             days=(0, 1, 2, 3, 4, 5, 6),
-            time=datetime.time(hour=9,
-                               minute=30,
-                               tzinfo=pytz.timezone("Europe/Madrid")
-                               ),
+            time=datetime.time(hour=9, minute=30, tzinfo=pytz.timezone("Europe/Madrid"))
         )
 
         self.application.run_polling()
