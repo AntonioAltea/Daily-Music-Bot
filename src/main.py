@@ -112,8 +112,8 @@ class DailyMusicBot:
             text=message)
 
     async def sendSongDaily(self, context: CallbackContext):
-        link = getSpotifyLink()
         for user in self.userdb.getAll():
+            link = getSpotifyLink()
             self.metrics_receive_song(name=user["name"],
                                       chatid=user["chatid"])
             message = "toma, " + user["name"] + \
