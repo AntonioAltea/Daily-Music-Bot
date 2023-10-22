@@ -79,7 +79,7 @@ class DailyMusicBot:
         for user in self.userdb.getAll():
             print(user["name"])
             print(user["chatid"])
-            
+
     def metrics_receive_song(self, name, chatid):
         user_metrics = self.metricsdb.getByQuery({"chatid": chatid})
         if user_metrics == []:
@@ -96,8 +96,7 @@ class DailyMusicBot:
         self.metrics_receive_song(name=update.message.from_user.full_name,
                                   chatid=update.effective_chat.id)
 
-        message = "toma, " + update.message.from_user.full_name + \
-            "! un temita\n" + getSpotifyLink()
+        message = "toma, " + update.message.from_user.full_name + "! un temita\n" + getSpotifyLink()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message)
@@ -116,8 +115,8 @@ class DailyMusicBot:
             link = getSpotifyLink()
             self.metrics_receive_song(name=user["name"],
                                       chatid=user["chatid"])
-            message = "toma, " + user["name"] + \
-                "! un temita\n" + link
+
+            message = "toma un temita, " + user["name"] + "! así va a irte el día\n" + link
             await context.bot.send_message(
                 chat_id=user["chatid"],
                 text=message)
@@ -126,7 +125,7 @@ class DailyMusicBot:
         self.application.job_queue.run_daily(
             self.sendSongDaily,
             days=(0, 1, 2, 3, 4, 5, 6),
-            time=datetime.time(hour=9, minute=30, tzinfo=pytz.timezone("Europe/Madrid"))
+            time=datetime.time(hour=8, minute=30, tzinfo=pytz.timezone("Europe/Madrid"))
         )
 
         self.application.run_polling()

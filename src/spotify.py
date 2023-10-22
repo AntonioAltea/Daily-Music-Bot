@@ -36,7 +36,11 @@ def getSpotifyLink():
 
     track_link_list = []
     for playlist_link in PLAYLIST_IDS.split(","):
-        tracks_in_playlist = get_playlist_tracks(playlist_link)
+        try:
+            tracks_in_playlist = get_playlist_tracks(playlist_link)
+        except spotipy.SpotifyException:
+            print(playlist_link + " playlist_not valid")
+            break
 
         if tracks_in_playlist is not None:
             for _, item in enumerate(tracks_in_playlist):
@@ -45,10 +49,9 @@ def getSpotifyLink():
                 except KeyError:
                     pass
 
-    # the si parameter is required so the link is opened with the andorid app,
-    # but it wont show metadata in webapp, no idea why
     random_link = ""
-    random_link = random.choice(track_link_list)  # + "?si=0"
+    # convert to set to eliminate duplicates
+    random_link = random.choice(list(set(track_link_list)))
 
     return random_link
 

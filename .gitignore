@@ -15,3 +15,6 @@ telbot/
 
 # spotify cache
 .cache
+
+# database backup
+backup

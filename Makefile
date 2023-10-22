@@ -39,5 +39,8 @@ fly-download-database:
 fly-upload-database:
 	scp -P 10022 db/* root@localhost:/db/
 
+fly-upload-env:
+	scp -P 10022 .env root@localhost:.env
+
 fly-ssh-key:
 	flyctl ssh issue --agent
