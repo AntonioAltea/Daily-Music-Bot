@@ -4,7 +4,7 @@ import pysondb
 import pytz
 import os
 from dotenv import load_dotenv
-from spotify import getSpotifyLink
+from spotify import getRandomSong, saveSongs
 from telegram import Update
 from telegram.ext import (ApplicationBuilder,
                           CallbackContext,
@@ -18,8 +18,11 @@ class DailyMusicBot:
         self.TELEGRAM_TOKEN = os.getenv("TELEGREM_TOKEN")
         self.USER_DATABASE = os.getenv("USER_DATABASE")
         self.METRICS_DATABASE = os.getenv("METRICS_DATABASE")
+
         self.userdb = pysondb.getDb(self.USER_DATABASE)
         self.metricsdb = pysondb.getDb(self.METRICS_DATABASE)
+
+        saveSongs()
 
         logging.basicConfig(
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -96,7 +99,13 @@ class DailyMusicBot:
         self.metrics_receive_song(name=update.message.from_user.full_name,
                                   chatid=update.effective_chat.id)
 
-        message = "toma, " + update.message.from_user.full_name + "! un temita\n" + getSpotifyLink()
+        song = getRandomSong()
+        if song is None:
+            message = "la api de spotify no me deja mandarte más canciones\n" \
+                "\nusureros cabrones no os pienso dar un duro"
+        else:
+            message = "toma, " + update.message.from_user.full_name + \
+                "! un temita\n" + getRandomSong()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message)
@@ -111,21 +120,35 @@ class DailyMusicBot:
             text=message)
 
     async def sendSongDaily(self, context: CallbackContext):
+        song = getRandomSong()
         for user in self.userdb.getAll():
-            link = getSpotifyLink()
             self.metrics_receive_song(name=user["name"],
                                       chatid=user["chatid"])
-
-            message = "toma un temita, " + user["name"] + "! así va a irte el día\n" + link
+            if song is None:
+                message = "la api de spotify no me deja mandarte más canciones\n" \
+                    "\nusureros cabrones no os pienso dar un duro"
+            else:
+                message = "toma un temita, " + \
+                    user["name"] + "! así va a irte el día\n" + song
             await context.bot.send_message(
                 chat_id=user["chatid"],
                 text=message)
 
+    def saveSongsDaily(self, context: CallbackContext):
+        saveSongs()
+
     def run(self):
+        self.application.job_queue.run_daily(
+            self.saveSongsDaily,
+            days=(0, 1, 2, 3, 4, 5, 6),
+            time=datetime.time(hour=8, minute=0,
+                               tzinfo=pytz.timezone("Europe/Madrid"))
+        )
         self.application.job_queue.run_daily(
             self.sendSongDaily,
             days=(0, 1, 2, 3, 4, 5, 6),
-            time=datetime.time(hour=8, minute=30, tzinfo=pytz.timezone("Europe/Madrid"))
+            time=datetime.time(hour=8, minute=30,
+                               tzinfo=pytz.timezone("Europe/Madrid"))
         )
 
         self.application.run_polling()
